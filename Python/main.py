@@ -1,41 +1,37 @@
 import numpy as np
 import cv2 as cv
-import os
 import matplotlib.pyplot as plt
-from keypointExtraction import KeypointExtraction
-from matching import Matching
+import warnings
+import matplotlib.cbook
+from featureMatcher import FeatureMatcher
+from templateMatcher import TemplateMatcher
+from generalFunctions import *
 
-# Load data
-def load_images_from_folder(folder):
-    images = []
-    for filename in os.listdir(folder):
+warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
-        if filename == 'Components.bmp':
-            comp_img = cv.imread(os.path.join(folder,filename))
-        else:
-            img = cv.imread(os.path.join(folder,filename))
-            if img is not None:
-                img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-                images.append(img)
-    return comp_img, images
+# clear output folder
+clear_output_folder()
 
-folder = "FeatureMatchingDataset"
+# folder paths
+imgs_folder_path = "../FeatureMatchingDataset"
+templates_folder_path = "../Templates"
+
+# loading images from folders
+comp_img, imgs = load_images_from_folder(imgs_folder_path)
+_, templates = load_images_from_folder(templates_folder_path)
+
+# Feature matching - ORB and KNN
+'''
 algorithm = "ORB"
 matcher = "KNN"
+featureMatcher = FeatureMatcher(comp_img, imgs[0], matcher, algorithm)
+featureMatcher.compute()
+'''
+t = 2 # template picture no. (max = 5)
+i = 38 # image no. (max = 38)
 
-comp_img, imgs = load_images_from_folder(folder)
+save_figure(templates[t], imgs[i])
 
-# Prepare data
-# Extract keypoints and descriptors # ORB 
-
-keypointExtractor = KeypointExtraction(comp_img, imgs[0])
-keypoints = keypointExtractor.keypointsORB()
-
-print('after keypoints')
-
-# Match 
-matching = Matching([comp_img, imgs[0]], keypoints, matcher, algorithm)
-matches = matching.match_keypoints()
-
-
-matching.draw_matches(matches)
+# Template matching
+templateMatcher = TemplateMatcher(templates[t], imgs[i], cv.TM_SQDIFF_NORMED)
+templateMatcher.template_matching()

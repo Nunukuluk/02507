@@ -1,6 +1,6 @@
 import cv2 as cv
 import matplotlib.pyplot as plt 
-from generalFunctions import save_figure
+from generalFunctions import output_figure
 
 class FeatureMatcher:
     def __init__(self, comp_img, img, matcher, algorithm):

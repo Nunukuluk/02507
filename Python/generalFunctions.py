@@ -5,13 +5,16 @@ import cv2 as cv
 from datetime import datetime
 import glob
 import imutils
+from pathlib import Path
 
 # Load data
 def load_images_from_folder(folder):
     images = []
     comp_img = None
     # for filename in os.listdir(folder):
-    for filename in sorted(glob.glob(folder + '/*')):
+    #for filename in sorted(glob.glob(folder + '/*')):
+    for filename in sorted(glob.glob(folder + '/**/*', recursive=True)):
+
         if filename == folder + '/Components.bmp':
             comp_img = cv.imread(os.path.join(filename), cv.IMREAD_GRAYSCALE)
         else:
@@ -41,6 +44,7 @@ def output_figure(*argv):
         ax = fig.add_subplot(1,lim,arg+1)
         ax.imshow(argv[arg], cmap='gray')
         dateTimeObj = datetime.now()
+        plt.axis('off')
     plt.savefig('output/' + str(dateTimeObj) + "_" + str(i) + ".png")
 
 def save_image(images, path):  

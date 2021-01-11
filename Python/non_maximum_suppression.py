@@ -24,7 +24,6 @@ def non_max_suppression_fast(boxes, overlapThresh):
   area = (x2 - x1 + 1) * (y2 - y1 + 1)
   idxs = np.argsort(y2)
 
-  print(area, idxs) # area=[42436 42436 42436 ... 20056 20056 20056] idxs=[2646 2651 2650 ... 1695 1696 1697]
   # keep looping while some indexes still remain in the indexes
   # list
   while len(idxs) > 0:

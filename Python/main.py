@@ -8,7 +8,7 @@ import math
 from featureMatcher import FeatureMatcher
 from templateMatcher import TemplateMatcher
 from generalFunctions import *
-
+from evaluation import Evaluation
 
 warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
@@ -23,11 +23,14 @@ clear_output_folder()
 
 # folder paths
 imgs_folder_path = "../FeatureMatchingDataset"
-templates_folder_path = "../Templates/45/0"
+templates_folder_path = "../Templates/45/"
 
 # loading images from folders
 comp_img, imgs = load_images_from_folder(imgs_folder_path)
-_, templates = load_images_from_folder(templates_folder_path)
+templates = []
+for i in range(0,6):
+    _, images = load_images_from_folder(templates_folder_path + str(i))
+    templates.append(images)
 
 # Load labels and positions
 labels = pd.read_csv('../Labels.txt', delimiter=' ', na_filter= False)
@@ -35,30 +38,39 @@ for i in range(0, 30):
     labels[str(i)] = labels[str(i)].map(lambda x: eval(x) if x != '' else x)
 
 
-
 # t = template picture no. (max = 5), i = image no. (max = 38)
 t = 3 # screws are 0 and 3
 i = 11
 res = 1
 
-# idxs_images = [0, 4, 6, 7, 8, 11, 36, 31]
-idxs_images = [36]
+threshold = True
+
+idxs_images = [38] #, 4, 6, 7, 8, 11, 36, 31] 12-2 bolts
+#resized = pre_processing([imgs[36]], res, threshold=True)
+#resized = np.reshape(resized[0], (resized.shape[1], resized.shape[2]))
+
 
 for i, indx in enumerate(idxs_images):
     img = imgs[indx]
-    resized = pre_processing(img, res)
+    output_figure(img)
+    resized = pre_processing([img], res, threshold=threshold)
+    true = [i for i in labels.iloc[indx+1][1:].tolist() if i] 
+    predictions = []
+    boxes = []
+    
+    #true = labels.iloc[indx+1][1]
     for i_t, t in enumerate(templates):
-        print("Image no. " + str(indx) + ". Template no. " + str(i_t))
-        resized_template = pre_processing(t, res)
-        if i_t == 0:
-            templateMatcher = TemplateMatcher(resized_template, resized, cv.TM_SQDIFF_NORMED)
-        else:
-            templateMatcher.set_template(resized_template)
-            
-        positions = templateMatcher.template_matching(i_t)
-        
-    print(labels.iloc[indx+1])
+        resized_templates = pre_processing(t, res, threshold=threshold)
+        templateMatcher = TemplateMatcher(resized_templates, resized[0], cv.TM_SQDIFF_NORMED)
+        box, pred = templateMatcher.template_matching(i_t)
+        predictions.append(pred)
+        boxes.append(box)
+        output_figure(resized_templates[0])
 
+    templateMatcher.plot_template_matching_results(boxes, true, predictions)
+    
+    evaluater = Evaluation(true, predictions)
+    evaluater.accuracy()
 
 # Preprocessing 
 '''

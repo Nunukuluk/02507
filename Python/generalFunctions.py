@@ -23,26 +23,59 @@ def load_images_from_folder(folder):
                 images.append(img)
     return comp_img, images
 
-def pre_processing(img, p_size, threshold=False):
-    out = img.astype('float32') # to gray and float
-    out /= 255.0 # normalize (0-1)
-    size = (int(img.shape[1] * p_size), int(img.shape[0] * p_size)) # Change resolution of image by percentage
-    out = cv.resize(out, size, interpolation = cv.INTER_AREA)
-    
-    if threshold:
-        _, out = cv.threshold(out,0.3,1.0,cv.THRESH_BINARY)
-        kernel = np.ones((5,5),np.float32)/25
-        out = cv.filter2D(out,-1,kernel)
-    
-    return out
+def pre_processing(images, p_size, threshold=False):
+    processed = []
+    for img in images:
+        out = img.astype('float32') # to gray and float
+        out /= 255.0 # normalize (0-1)
+        size = (int(img.shape[1] * p_size), int(img.shape[0] * p_size)) # Change resolution of image by percentage
+        out = cv.resize(out, size, interpolation = cv.INTER_AREA)
+        if threshold:
+            # Threshold image
+            _, out = cv.threshold(out,0.20,1.0,cv.THRESH_BINARY)
+
+            # Median blur
+            out = cv.medianBlur(out, 3) 
+
+            # Opening
+            kernel = np.ones((3,3), np.uint8)
+            out = cv.morphologyEx(out, cv.MORPH_OPEN, kernel)
+            
+            # Closing
+            morph_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
+            out = cv.morphologyEx(out, cv.MORPH_CLOSE, morph_kernel, iterations=2)
+            output_figure(out)
+            
+            '''
+            # Otsu's thresholding after Gaussian filtering
+            out = cv.GaussianBlur(out,(3,3),0)
+            output_figure(out)
+            ret3, out = cv.threshold(np.uint8(out), 0.5, 1.0, cv.THRESH_BINARY+cv.THRESH_OTSU)
+            output_figure(out)
+            
+            # Morphological gradient    
+            kernel = np.ones((5,5),np.uint8)
+            erosion = cv.erode(out, kernel, iterations = 1)
+            dilation = cv.dilate(out, kernel, iterations = 1)
+            out = dilation - erosion 
+            output_figure(out)
+            '''
+            
+            
+
+        processed.append(out)
+    return processed
 
 
-def output_figure(*argv):  
+def output_figure(*argv, colored_image=False):  
     lim = len(argv)
     fig = plt.figure(figsize=(10, 10))
     for i, arg in enumerate(range(lim)):  
         ax = fig.add_subplot(1,lim,arg+1)
-        ax.imshow(argv[arg], cmap='gray')
+        if colored_image:
+            ax.imshow(argv[arg])
+        else:
+            ax.imshow(argv[arg], cmap='gray')
         dateTimeObj = datetime.now()
         plt.axis('off')
     plt.savefig('output/' + str(dateTimeObj) + "_" + str(i) + ".png")
@@ -55,7 +88,6 @@ def clear_output_folder():
     files = glob.glob('output/*')
     for f in files:
         os.remove(f)
-
 
 def rotate_image(image, angle, label):
     path = "../Templates/" + str(angle)

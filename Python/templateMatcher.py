@@ -8,15 +8,19 @@ class TemplateMatcher:
     methods = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
                 'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
     '''
-    def __init__(self, templates, img, method):
+    def __init__(self, templates, img, method, resolution):
         self.templates = templates
         self.img = img
         self.method = method
         self.result = cv.cvtColor(img.copy(),cv.COLOR_GRAY2RGB)
+        self.resolution = resolution
         # Set dimensions of bb here and access depending on template
 
     def set_template(self, templates):
         self.templates = templates
+
+    def set_result(self, result):
+        self.result = result
 
     def get_center(self, x1, y1, x2, y2):
         center_x = int((x1 + x2) / 2)
@@ -27,7 +31,9 @@ class TemplateMatcher:
         pred = []
         boxes_out = []
         # The smaller the threshold the stricter
-        thresholds = [0.3, 0.3, 0.1, 0.4, 0.3, 0.1]
+        # Work on 0 3 6
+        
+        thresholds = [0.35, 0.3, 0.2, 0.25, 0.3, 0.1, 0.35] # - with threshold
 
         for t in self.templates:
             boxes = []
@@ -42,11 +48,11 @@ class TemplateMatcher:
 
             bottom_right = (top_left[0] + w, top_left[1] + h)
 
-            threshold = thresholds[label]   
+            threshold = thresholds[label] 
             loc = np.where(mtResult <= threshold)
             for pt in zip(*loc[::-1]):
                 # x, y, x + w, y + h
-                boxes.append([pt[0], pt[1], pt[0] + w, pt[1] + h])
+                boxes.append([int(pt[0] / self.resolution), int(pt[1] / self.resolution), int((pt[0] + w) / self.resolution), int((pt[1] + h) / self.resolution)])
             
             boxes = np.array(boxes)
             boxes = non_max_suppression_fast(boxes, 0.4)
@@ -59,6 +65,9 @@ class TemplateMatcher:
         return boxes_out, pred
 
     def plot_template_matching_results(self, boxes, true, pred):
+
+        size = (int(self.result.shape[1] / self.resolution), int(self.result.shape[0] / self.resolution)) # Change resolution of image by percentage
+        self.result = cv.resize(self.result, size, interpolation = cv.INTER_AREA)
 
         for i, b in enumerate(boxes):
             for j, subbox in enumerate(b):
@@ -81,14 +90,4 @@ class TemplateMatcher:
         # Save figure 
         output_figure(self.result, colored_image=True)
 
-'''
-For a template (i.e. a specific label):
-Find positions of that label in the image
-Return the positions for that label
-
-For an image
-    For a template  
-        Find position(s) in image for template
-
-'''
 

@@ -11,8 +11,7 @@ from pathlib import Path
 def load_images_from_folder(folder):
     images = []
     comp_img = None
-    # for filename in os.listdir(folder):
-    #for filename in sorted(glob.glob(folder + '/*')):
+
     for filename in sorted(glob.glob(folder + '/**/*', recursive=True)):
 
         if filename == folder + '/Components.bmp':
@@ -31,21 +30,37 @@ def pre_processing(images, p_size, threshold=False):
         size = (int(img.shape[1] * p_size), int(img.shape[0] * p_size)) # Change resolution of image by percentage
         out = cv.resize(out, size, interpolation = cv.INTER_AREA)
         if threshold:
+            # out = cv.medianBlur(out,5)
             # Threshold image
-            _, out = cv.threshold(out,0.20,1.0,cv.THRESH_BINARY)
-
+            # out = cv.adaptiveThreshold((out).astype('uint8'), 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 11, 10)
+            _, out = cv.threshold(out,0.20,1.0,cv.THRESH_BINARY) # 0.20 was good
+            #output_figure(out, title='After thresh')
             # Median blur
             out = cv.medianBlur(out, 3) 
+            #output_figure(out, title='After median')
 
             # Opening
             kernel = np.ones((3,3), np.uint8)
             out = cv.morphologyEx(out, cv.MORPH_OPEN, kernel)
+            #output_figure(out, title='After opening')
+            
             
             # Closing
-            morph_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
-            out = cv.morphologyEx(out, cv.MORPH_CLOSE, morph_kernel, iterations=2)
-            output_figure(out)
-            
+            morph_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(3,3))
+            out = cv.morphologyEx(out, cv.MORPH_CLOSE, morph_kernel, iterations=3)
+            #output_figure(out, title='After closing')
+
+            '''
+                        # Closing
+            morph_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(3,3))
+            out = cv.morphologyEx(out, cv.MORPH_CLOSE, morph_kernel, iterations=3)
+            #output_figure(out, title='After closing')
+
+            # Erosion
+            kernel = np.ones((5,5),np.uint8)
+            out = cv.erode(out, kernel, iterations = 1)
+
+            '''
             '''
             # Otsu's thresholding after Gaussian filtering
             out = cv.GaussianBlur(out,(3,3),0)
@@ -60,14 +75,12 @@ def pre_processing(images, p_size, threshold=False):
             out = dilation - erosion 
             output_figure(out)
             '''
-            
-            
 
         processed.append(out)
     return processed
 
 
-def output_figure(*argv, colored_image=False):  
+def output_figure(*argv, colored_image=False, title=''):  
     lim = len(argv)
     fig = plt.figure(figsize=(10, 10))
     for i, arg in enumerate(range(lim)):  
@@ -76,6 +89,7 @@ def output_figure(*argv, colored_image=False):
             ax.imshow(argv[arg])
         else:
             ax.imshow(argv[arg], cmap='gray')
+        plt.title(title, fontsize=40)
         dateTimeObj = datetime.now()
         plt.axis('off')
     plt.savefig('output/' + str(dateTimeObj) + "_" + str(i) + ".png")
@@ -102,6 +116,6 @@ def rotate_image(image, angle, label):
         rotated.append(result)
         temp_angle += angle
 
-    save_image(rotated, path=path + "/" + str(label) + '_')
+    save_image(rotated, path=path + "/" + str(label) + '0_')
 
     return result

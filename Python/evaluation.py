@@ -18,33 +18,40 @@ class Evaluation:
         # Handle how to decide which position to compare against for label
 
         # put predictions as misclassified if there are more than one box very close to the center points.
-
+        max_distance = 100
 
         true_label = [i[0] for i in self.true if i] 
         true_point = [i[1] for i in self.true if i] 
         predictions_label = [i[0] for pred in self.predictions for i in pred]
+        print("Non changed predictions_point:", self.predictions)
         predictions_point = [i[1] for pred in self.predictions for i in pred]
+        print("Changed predictions_point:", predictions_point)
         
-        #predictions_lengths = [len(i) for i in predictions]
-        
-        nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree',  metric='euclidean').fit(predictions_point)
-        distances, indices = nbrs.kneighbors(true_point)
         acc = 0
 
-        for i, indx in enumerate(indices):
-            print("True: ", true_label[i])
-            print("Pred: ", predictions_label[indx[0]])
-            print("Distance: ", distances[i])
-            # If the label is correct and if the distance is smaller than x and if there
-            # are not multiple predictions for the same instance
-            if  true_label[i] == predictions_label[indx[0]] and distances[i] < 100:
-                acc += 1
-        
-        acc /= len(true_label)
-        print("Accuracy: ", acc)
-        # print("Indices: ", indices, ".\n Predictions point: ", predictions_point, ". \nDistances: ", distances)
-        
-        print("True:", self.true, ". \n Pred:", self.predictions)
+        if predictions_point:
+            nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree',  metric='euclidean').fit(predictions_point)
+            distances, indices = nbrs.kneighbors(true_point)
+
+            for i, indx in enumerate(indices):
+                print("True: ", true_label[i])
+                print("Pred: ", predictions_label[indx[0]])
+                # print("Distance: ", distances[i])
+                # If the label is correct and if the distance is smaller than x and if there
+                # are not multiple predictions for the same instance
+                if  true_label[i] == predictions_label[indx[0]] and distances[i] < max_distance:
+                    acc += 1
+                
+                if predictions_label[indx[0]] == 6 and true_label[i] == 3 and distances[i] < max_distance:
+                    acc += 1
+            
+            acc /= len(true_label)
+            print("Accuracy: ", acc, "\n")
+            # print("Indices: ", indices, ".\n Predictions point: ", predictions_point, ". \nDistances: ", distances)
+            
+            #print("True:", self.true, ". \n Pred:", self.predictions)
+
+        return acc
         
 
     

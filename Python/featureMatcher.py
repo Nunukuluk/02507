@@ -93,7 +93,8 @@ class FeatureMatcher:
         plt.show()
         '''
         
-        save_figure(img_matches)
+        output_figure(img_matches, title="Matches for " + str(self.algorithm) + " and " + str(self.matcher))
+        
     def compute(self):
         # Extract keypoints
         self.extract_keypoints()

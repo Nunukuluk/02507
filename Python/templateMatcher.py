@@ -33,7 +33,7 @@ class TemplateMatcher:
         # The smaller the threshold the stricter
         # Work on 0 3 6
         
-        thresholds = [0.35, 0.3, 0.2, 0.25, 0.3, 0.1, 0.35] # - with threshold
+        thresholds = [0.35, 0.3, 0.2, 0.4, 0.3, 0.1] # 0.35] # - with threshold thresholds = [0.35, 0.3, 0.2, 0.25, 0.3, 0.1]
 
         for t in self.templates:
             boxes = []
@@ -55,7 +55,7 @@ class TemplateMatcher:
                 boxes.append([int(pt[0] / self.resolution), int(pt[1] / self.resolution), int((pt[0] + w) / self.resolution), int((pt[1] + h) / self.resolution)])
             
             boxes = np.array(boxes)
-            boxes = non_max_suppression_fast(boxes, 0.4)
+            boxes = non_max_suppression_fast(boxes, 0.4) #0.4
 
             for b in boxes:
                 # Append center position of box with label
@@ -65,7 +65,6 @@ class TemplateMatcher:
         return boxes_out, pred
 
     def plot_template_matching_results(self, boxes, true, pred):
-
         size = (int(self.result.shape[1] / self.resolution), int(self.result.shape[0] / self.resolution)) # Change resolution of image by percentage
         self.result = cv.resize(self.result, size, interpolation = cv.INTER_AREA)
 

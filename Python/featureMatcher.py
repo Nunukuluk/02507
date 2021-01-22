@@ -74,7 +74,7 @@ class FeatureMatcher:
         plt.figure(dpi=300)
         if self.matcher == 'BRUTE':
             # Draw first 10 matches.
-            img_matches = cv.drawMatches(self.comp_img, self.kpt_1, self.img, self.kpt_2, self.matches, None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+            img_matches = cv.drawMatches(self.comp_img, self.kpt_1, self.img, self.kpt_2, self.matches[:100], None, flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
             img_keypoints1 = cv.drawKeypoints(self.comp_img, self.kpt_1, None, flags=cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
             img_keypoints2 = cv.drawKeypoints(self.img, self.kpt_2, None, flags=cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
         
@@ -93,7 +93,9 @@ class FeatureMatcher:
         plt.show()
         '''
         
-        save_figure(img_matches)
+        #output_figure(img_matches, title="Matches for " + str(self.algorithm) + " and " + str(self.matcher))
+        output_figure(img_matches)
+        
     def compute(self):
         # Extract keypoints
         self.extract_keypoints()

@@ -50,6 +50,7 @@ class TemplateMatcher:
 
             threshold = thresholds[label] 
             loc = np.where(mtResult <= threshold)
+            
             for pt in zip(*loc[::-1]):
                 # x, y, x + w, y + h
                 boxes.append([int(pt[0] / self.resolution), int(pt[1] / self.resolution), int((pt[0] + w) / self.resolution), int((pt[1] + h) / self.resolution)])

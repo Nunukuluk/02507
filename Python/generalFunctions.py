@@ -50,32 +50,6 @@ def pre_processing(images, p_size, threshold=False):
             out = cv.morphologyEx(out, cv.MORPH_CLOSE, morph_kernel, iterations=3)
             #output_figure(out, title='After closing')
 
-            '''
-                        # Closing
-            morph_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(3,3))
-            out = cv.morphologyEx(out, cv.MORPH_CLOSE, morph_kernel, iterations=3)
-            #output_figure(out, title='After closing')
-
-            # Erosion
-            kernel = np.ones((5,5),np.uint8)
-            out = cv.erode(out, kernel, iterations = 1)
-
-            '''
-            '''
-            # Otsu's thresholding after Gaussian filtering
-            out = cv.GaussianBlur(out,(3,3),0)
-            output_figure(out)
-            ret3, out = cv.threshold(np.uint8(out), 0.5, 1.0, cv.THRESH_BINARY+cv.THRESH_OTSU)
-            output_figure(out)
-            
-            # Morphological gradient    
-            kernel = np.ones((5,5),np.uint8)
-            erosion = cv.erode(out, kernel, iterations = 1)
-            dilation = cv.dilate(out, kernel, iterations = 1)
-            out = dilation - erosion 
-            output_figure(out)
-            '''
-
         processed.append(out)
     return processed
 

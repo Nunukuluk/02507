@@ -27,7 +27,7 @@
         </bndbox>
     </object>
     <object>
-        <name>2</name>
+        <name>3</name>
         <difficult>0</difficult>
         <bndbox>
             <xmin>716</xmin>

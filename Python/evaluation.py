@@ -2,7 +2,9 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import KDTree
 import sklearn.metrics
-
+import pandas as pd
+import seaborn as sn
+import matplotlib.pyplot as plt
 class Evaluation:
     def __init__(self):
         self.true = 0
@@ -60,14 +62,26 @@ class Evaluation:
             num_missing += len(self.true_label) -  len(self.indices)
 
         print("misclassified:", num_misclassified)
-        print("missing:", num_missing)
-
-        fpr = num_misclassified/len(self.indices)
-        return fpr, num_missing
+        print("missing:", num_missing, "percent:", (num_missing/len(self.true_label))*100, "length of true: ", len(self.true_label))
+        
+        return num_misclassified, num_missing, len(self.true_label)
 
     def get_confusion_matrix(self):
-        cm = sklearn.metrics.confusion_matrix(self.cm_true, self.cm_pred, labels=np.arange(6), normalize='all')
+        cm = sklearn.metrics.confusion_matrix(self.cm_true, self.cm_pred, labels=np.arange(6)) #, normalize='all')
         return cm
+
+    def plot_confusion_matrix(self, cm, title, path):
+        df_cm = pd.DataFrame(cm, columns=np.arange(6), index=np.arange(6))
+
+        df_cm.index.name = 'Actual'
+        df_cm.columns.name = 'Predicted'
+        plt.figure(figsize = (10,7))
+        plt.title(title, fontsize=20)
+        sn.set(font_scale=1.7)#for label size
+        plt.xlabel('Predicted', fontsize=18)
+        plt.ylabel('Actual', fontsize=18)
+        hm = sn.heatmap(df_cm, cmap="Blues", annot=True, annot_kws={"size": 16})# font size
+        plt.savefig(path)
 
     def accuracy(self, true, predictions, get_cm=True):
 
@@ -81,6 +95,7 @@ class Evaluation:
         # Handle cases where we have more or less predictions than labels
         # Handle how to decide which position to compare against for label
         acc = 0
+        avg_distance = 0
 
         if self.predictions_point:
             nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree',  metric='euclidean').fit(self.predictions_point)
@@ -89,16 +104,17 @@ class Evaluation:
             for i, indx in enumerate(self.indices):
             
                 # If the label is correct and if the distance is smaller than x and if there are not multiple predictions for the same instance
-                if self.true_label[i] == self.predictions_label[indx[0]] and self.distances[i] < self.max_distance:
-                    acc += 1
-                
-                if self.predictions_label[indx[0]] == 6 and self.true_label[i] == 3 and self.distances[i] < self.max_distance:
-                    acc += 1
-            
+                 if self.distances[i] < self.max_distance:
+                    avg_distance += self.distances[i].squeeze()
+                    if self.true_label[i] == self.predictions_label[indx[0]] or self.predictions_label[indx[0]] == 6 and self.true_label[i] == 3:
+                        acc += 1
+
             acc /= len(self.true_label)
+            avg_distance /= len(self.true_label)
             print("Accuracy: ", acc, "\n")
+            print("Average distance: ", int(avg_distance), "\n")
             
-        return acc
+        return acc, avg_distance
 
 
 '''
